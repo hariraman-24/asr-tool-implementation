@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Meeting Archives & Records - MeetBrief{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+  <div>
+    <h1 style="font-size: 2.2rem; font-weight: 800;">Meeting Archives & Minutes</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem;">
+      Search historical meetings, access generated Minutes of Meeting (MoM), and export reports.
+    </p>
+  </div>
+  <a href="/" class="btn btn-primary">
+    <i class="fa-solid fa-microphone"></i> New Voice Meeting
+  </a>
+</div>
+
+<!-- Filter Bar -->
+<form method="GET" action="/meetings" class="filter-bar">
+  <div style="flex: 1; min-width: 220px;">
+    <input type="text" name="search" class="form-control" style="width: 100%;" placeholder="Search by title, keywords, or topics..." value="{{ search }}">
+  </div>
+
+  <div>
+    <select name="department" class="form-control">
+      <option value="All" {% if department == 'All' %}selected{% endif %}>All Departments</option>
+      <option value="Computer Science & Engineering" {% if department == 'Computer Science & Engineering' %}selected{% endif %}>Computer Science & Eng</option>
+      <option value="Information Technology" {% if department == 'Information Technology' %}selected{% endif %}>Information Technology</option>
+      <option value="Electronics & Communication" {% if department == 'Electronics & Communication' %}selected{% endif %}>Electronics & Communication</option>
+      <option value="Mechanical Engineering" {% if department == 'Mechanical Engineering' %}selected{% endif %}>Mechanical Engineering</option>
+    </select>
+  </div>
+
+  <div>
+    <input type="date" name="date" class="form-control" value="{{ date }}">
+  </div>
+
+  <button type="submit" class="btn btn-secondary">
+    <i class="fa-solid fa-filter"></i> Apply Filter
+  </button>
+  <a href="/meetings" class="btn btn-secondary" style="color: var(--text-dim);">
+    Reset
+  </a>
+</form>
+
+<!-- Meetings List -->
+{% if meetings %}
+<div style="display: flex; flex-direction: column; gap: 1.25rem;">
+  {% for m in meetings %}
+  <div class="glass-card" style="padding: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 0.75rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.35rem;">
+          <span class="badge-priority priority-low">Meeting #{{ m.id }}</span>
+          <span style="font-size: 0.85rem; color: var(--text-dim);"><i class="fa-regular fa-clock"></i> {{ m.date }} • {{ m.time }}</span>
+          <span style="font-size: 0.8rem; background: rgba(255,255,255,0.06); padding: 2px 8px; border-radius: 4px; color: var(--text-muted);">
+            {{ m.department }}
+          </span>
+        </div>
+        <h2 style="font-size: 1.35rem;">
+          <a href="/meeting/{{ m.id }}">{{ m.title }}</a>
+        </h2>
+      </div>
+
+      <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <a href="/meeting/{{ m.id }}/pdf" class="btn btn-primary" style="padding: 0.45rem 0.9rem; font-size: 0.85rem;" target="_blank">
+          <i class="fa-solid fa-file-pdf"></i> PDF MoM
+        </a>
+        <a href="/meeting/{{ m.id }}/csv" class="btn btn-secondary" style="padding: 0.45rem 0.9rem; font-size: 0.85rem;">
+          <i class="fa-solid fa-file-csv"></i> CSV
+        </a>
+        <a href="/meeting/{{ m.id }}" class="btn btn-secondary" style="padding: 0.45rem 0.9rem; font-size: 0.85rem;">
+          <i class="fa-solid fa-arrow-right"></i> Open
+        </a>
+        <button class="btn btn-danger delete-meeting-btn" data-id="{{ m.id }}" style="padding: 0.45rem 0.75rem; font-size: 0.85rem;" title="Delete Meeting">
+          <i class="fa-solid fa-trash"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Attendees list -->
+    {% if m.attendees %}
+    <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.75rem;">
+      {% for att in m.attendees %}
+      <span style="font-size: 0.75rem; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255,255,255,0.08); padding: 2px 8px; border-radius: 9999px; color: #cbd5e1;">
+        👤 {{ att }}
+      </span>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin-bottom: 1rem;">
+      {{ m.summary }}
+    </p>
+
+    <!-- Footer metadata -->
+    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.75rem; font-size: 0.85rem;">
+      <span style="color: var(--cyan-primary); font-weight: 600;">
+        <i class="fa-solid fa-list-check"></i> {{ m.completed_tasks }} of {{ m.total_tasks }} Action Items Completed
+      </span>
+      <span style="color: var(--text-dim);">
+        {{ m.decisions|length }} Decisions Logged
+      </span>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="glass-card" style="text-align: center; padding: 3rem 1.5rem;">
+  <i class="fa-regular fa-folder-open" style="font-size: 3rem; color: var(--text-dim); margin-bottom: 1rem;"></i>
+  <h3>No meetings found</h3>
+  <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Try adjusting your filters or record a new voice meeting.</p>
+  <a href="/" class="btn btn-primary"><i class="fa-solid fa-microphone"></i> Start Voice Scribe</a>
+</div>
+{% endif %}
+{% endblock %}

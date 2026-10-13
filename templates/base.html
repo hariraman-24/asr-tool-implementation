@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}MeetBrief - Privacy-First Voice Meeting Minutes & Action Items{% endblock %}</title>
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Custom Glassmorphism Stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  
+  <!-- Chart.js for Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/" class="nav-brand">
+        <div class="brand-icon">
+          <i class="fa-solid fa-microphone-lines"></i>
+        </div>
+        <span>MeetBrief</span>
+        <span class="brand-badge">ASR CORE</span>
+      </a>
+
+      <ul class="nav-links">
+        <li>
+          <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">
+            <i class="fa-solid fa-headset"></i> Voice Scribe
+          </a>
+        </li>
+        <li>
+          <a href="/dashboard" class="nav-link {% if request.path == '/dashboard' %}active{% endif %}">
+            <i class="fa-solid fa-chart-pie"></i> Dashboard
+          </a>
+        </li>
+        <li>
+          <a href="/meetings" class="nav-link {% if request.path.startswith('/meetings') or request.path.startswith('/meeting/') %}active{% endif %}">
+            <i class="fa-solid fa-folder-open"></i> Meetings
+          </a>
+        </li>
+        <li>
+          <a href="/action-items" class="nav-link {% if request.path == '/action-items' %}active{% endif %}">
+            <i class="fa-solid fa-list-check"></i> Action Items
+          </a>
+        </li>
+      </ul>
+
+      <div class="nav-meta">
+        <div class="live-indicator">
+          <span class="pulse-dot"></span>
+          <span>ON-PREMISE ASR</span>
+        </div>
+        <span id="navLiveClock" style="font-size:0.8rem; font-weight:500;"></span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content Container -->
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div>
+        <strong>MeetBrief</strong> • Privacy-First Real-Time Voice Meeting Minutes & Action Item Management System
+      </div>
+      <div>
+        SRM Institute of Science and Technology • Dept. of Computer Science & Engineering • Dr. R. Baskar
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="{{ url_for('static', filename='js/recorder.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

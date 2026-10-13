@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics & Management Dashboard - MeetBrief{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+  <div>
+    <h1 style="font-size: 2.2rem; font-weight: 800;">Analytics & Action Tracker</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem;">
+      Real-time metrics on meetings conducted, task completion velocity, and team accountability.
+    </p>
+  </div>
+  <a href="/" class="btn btn-primary">
+    <i class="fa-solid fa-microphone"></i> New Voice Meeting
+  </a>
+</div>
+
+<!-- KPI Cards -->
+<div class="kpi-grid">
+  <div class="kpi-card kpi-cyan">
+    <div class="kpi-info">
+      <span class="kpi-label">Total Meetings</span>
+      <span class="kpi-value">{{ stats.total_meetings }}</span>
+      <span class="kpi-sub">Archived sessions</span>
+    </div>
+    <div class="kpi-icon">
+      <i class="fa-solid fa-calendar-check"></i>
+    </div>
+  </div>
+
+  <div class="kpi-card kpi-indigo">
+    <div class="kpi-info">
+      <span class="kpi-label">Action Items</span>
+      <span class="kpi-value">{{ stats.total_tasks }}</span>
+      <span class="kpi-sub">Total extracted tasks</span>
+    </div>
+    <div class="kpi-icon">
+      <i class="fa-solid fa-list-check"></i>
+    </div>
+  </div>
+
+  <div class="kpi-card kpi-emerald">
+    <div class="kpi-info">
+      <span class="kpi-label">Completed</span>
+      <span class="kpi-value">{{ stats.completed_tasks }}</span>
+      <span class="kpi-sub">{{ stats.completion_rate }}% completion rate</span>
+    </div>
+    <div class="kpi-icon">
+      <i class="fa-solid fa-circle-check"></i>
+    </div>
+  </div>
+
+  <div class="kpi-card kpi-amber">
+    <div class="kpi-info">
+      <span class="kpi-label">Pending / In Progress</span>
+      <span class="kpi-value">{{ stats.pending_tasks + stats.in_progress_tasks }}</span>
+      <span class="kpi-sub">Active open tasks</span>
+    </div>
+    <div class="kpi-icon">
+      <i class="fa-solid fa-hourglass-half"></i>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Grid -->
+<div class="charts-grid">
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3 class="chart-title"><i class="fa-solid fa-chart-pie"></i> Action Items Status Breakdown</h3>
+    </div>
+    <div style="position: relative; height: 260px; display: flex; justify-content: center;">
+      <canvas id="statusChart"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3 class="chart-title"><i class="fa-solid fa-users"></i> Member Workload & Completion</h3>
+    </div>
+    <div style="position: relative; height: 260px;">
+      <canvas id="assigneeChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="charts-grid">
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3 class="chart-title"><i class="fa-solid fa-triangle-exclamation"></i> Tasks by Priority Level</h3>
+    </div>
+    <div style="position: relative; height: 240px;">
+      <canvas id="priorityChart"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3 class="chart-title"><i class="fa-solid fa-building-columns"></i> Meetings by Department</h3>
+    </div>
+    <div style="position: relative; height: 240px;">
+      <canvas id="deptChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Meetings Table -->
+<div class="glass-card" style="margin-top: 1rem;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+    <h3 style="font-size: 1.15rem;"><i class="fa-solid fa-clock-rotate-left"></i> Latest Recorded Meetings</h3>
+    <a href="/meetings" class="btn btn-secondary" style="padding: 0.35rem 0.85rem; font-size: 0.8rem;">
+      View All Archive
+    </a>
+  </div>
+  <div style="overflow-x: auto;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Meeting Title</th>
+          <th>Department</th>
+          <th>Date & Time</th>
+          <th>Action Tasks</th>
+          <th>Progress</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in stats.recent_meetings %}
+        <tr>
+          <td>
+            <strong><a href="/meeting/{{ m.id }}">{{ m.title }}</a></strong>
+          </td>
+          <td><span style="font-size: 0.8rem; color: var(--text-dim);">{{ m.department }}</span></td>
+          <td>{{ m.date }} • {{ m.time }}</td>
+          <td>{{ m.completed_tasks }} of {{ m.total_tasks }} Done</td>
+          <td style="width: 140px;">
+            {% set pct = (m.completed_tasks / m.total_tasks * 100)|round|int if m.total_tasks > 0 else 0 %}
+            <div style="background: rgba(255,255,255,0.1); border-radius: 9999px; height: 8px; width: 100%; overflow: hidden;">
+              <div style="background: var(--emerald-success); height: 100%; width: {{ pct }}%;"></div>
+            </div>
+            <span style="font-size: 0.75rem; color: var(--text-dim);">{{ pct }}% complete</span>
+          </td>
+          <td>
+            <div style="display: flex; gap: 0.5rem;">
+              <a href="/meeting/{{ m.id }}/pdf" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" title="Download PDF MoM">
+                <i class="fa-solid fa-file-pdf"></i>
+              </a>
+              <a href="/meeting/{{ m.id }}" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" title="View Details">
+                <i class="fa-solid fa-eye"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Chart Colors
+  const cyan = '#06b6d4';
+  const emerald = '#10b981';
+  const amber = '#f59e0b';
+  const rose = '#ef4444';
+  const indigo = '#6366f1';
+  const slate = '#64748b';
+
+  // 1. Status Doughnut Chart
+  const statusCtx = document.getElementById('statusChart').getContext('2d');
+  new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Completed', 'Pending', 'In Progress'],
+      datasets: [{
+        data: [{{ stats.completed_tasks }}, {{ stats.pending_tasks }}, {{ stats.in_progress_tasks }}],
+        backgroundColor: [emerald, slate, amber],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#94a3b8' } }
+      },
+      cutout: '70%'
+    }
+  });
+
+  // 2. Member Workload Bar Chart
+  const assigneeStats = {{ stats.assignee_stats|tojson }};
+  const assigneeLabels = assigneeStats.map(a => a.assignee);
+  const assigneeTotal = assigneeStats.map(a => a.total);
+  const assigneeDone = assigneeStats.map(a => a.done);
+
+  const assigneeCtx = document.getElementById('assigneeChart').getContext('2d');
+  new Chart(assigneeCtx, {
+    type: 'bar',
+    data: {
+      labels: assigneeLabels.length ? assigneeLabels : ['No data'],
+      datasets: [
+        {
+          label: 'Completed Tasks',
+          data: assigneeDone.length ? assigneeDone : [0],
+          backgroundColor: emerald,
+          borderRadius: 4
+        },
+        {
+          label: 'Total Assigned',
+          data: assigneeTotal.length ? assigneeTotal : [0],
+          backgroundColor: cyan,
+          borderRadius: 4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+        y: { ticks: { color: '#94a3b8', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.05)' } }
+      },
+      plugins: {
+        legend: { labels: { color: '#94a3b8' } }
+      }
+    }
+  });
+
+  // 3. Priority Bar Chart
+  const priorityCounts = {{ stats.priority_counts|tojson }};
+  const priorityCtx = document.getElementById('priorityChart').getContext('2d');
+  new Chart(priorityCtx, {
+    type: 'bar',
+    data: {
+      labels: ['High Priority', 'Medium Priority', 'Low Priority'],
+      datasets: [{
+        label: 'Task Count',
+        data: [priorityCounts.High || 0, priorityCounts.Medium || 0, priorityCounts.Low || 0],
+        backgroundColor: [rose, amber, indigo],
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+        y: { ticks: { color: '#94a3b8', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.05)' } }
+      },
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+
+  // 4. Dept Chart
+  const deptStats = {{ stats.dept_stats|tojson }};
+  const deptLabels = deptStats.map(d => d.department);
+  const deptCounts = deptStats.map(d => d.count);
+
+  const deptCtx = document.getElementById('deptChart').getContext('2d');
+  new Chart(deptCtx, {
+    type: 'bar',
+    data: {
+      labels: deptLabels.length ? deptLabels : ['CSE'],
+      datasets: [{
+        label: 'Meetings',
+        data: deptCounts.length ? deptCounts : [1],
+        backgroundColor: indigo,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+        y: { ticks: { color: '#94a3b8', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.05)' } }
+      },
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+});
+</script>
+{% endblock %}

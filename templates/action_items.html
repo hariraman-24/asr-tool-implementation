@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Action Items & Task Checklist - MeetBrief{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+  <div>
+    <h1 style="font-size: 2.2rem; font-weight: 800;">Action Items Tracker</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem;">
+      Unified task matrix extracted across all recorded meetings with real-time status management.
+    </p>
+  </div>
+  <a href="/" class="btn btn-primary">
+    <i class="fa-solid fa-microphone"></i> New Voice Meeting
+  </a>
+</div>
+
+<!-- Filters -->
+<form method="GET" action="/action-items" class="filter-bar">
+  <div style="flex: 1; min-width: 200px;">
+    <input type="text" name="search" class="form-control" style="width: 100%;" placeholder="Search tasks, assignees, or meetings..." value="{{ search }}">
+  </div>
+
+  <div>
+    <select name="status" class="form-control">
+      <option value="All" {% if status == 'All' %}selected{% endif %}>All Statuses</option>
+      <option value="Pending" {% if status == 'Pending' %}selected{% endif %}>Pending</option>
+      <option value="In Progress" {% if status == 'In Progress' %}selected{% endif %}>In Progress</option>
+      <option value="Completed" {% if status == 'Completed' %}selected{% endif %}>Completed</option>
+    </select>
+  </div>
+
+  <div>
+    <select name="priority" class="form-control">
+      <option value="All" {% if priority == 'All' %}selected{% endif %}>All Priorities</option>
+      <option value="High" {% if priority == 'High' %}selected{% endif %}>High Priority</option>
+      <option value="Medium" {% if priority == 'Medium' %}selected{% endif %}>Medium Priority</option>
+      <option value="Low" {% if priority == 'Low' %}selected{% endif %}>Low Priority</option>
+    </select>
+  </div>
+
+  <button type="submit" class="btn btn-secondary">
+    <i class="fa-solid fa-filter"></i> Filter
+  </button>
+  <a href="/action-items" class="btn btn-secondary" style="color: var(--text-dim);">
+    Reset
+  </a>
+</form>
+
+<!-- Action Items Table -->
+<div class="glass-card" style="padding: 1.5rem;">
+  {% if items %}
+  <div style="overflow-x: auto;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th style="width: 35px;">Done</th>
+          <th>Action Item / Task</th>
+          <th>Assignee</th>
+          <th>Priority</th>
+          <th>Due Date</th>
+          <th>Origin Meeting</th>
+          <th>Status</th>
+          <th style="width: 40px;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>
+            <input type="checkbox" class="task-checkbox" {% if item.status == 'Completed' %}checked{% endif %}
+              onchange="toggleTaskStatus({{ item.id }})">
+          </td>
+          <td>
+            <span style="{% if item.status == 'Completed' %}text-decoration: line-through; color: var(--text-dim);{% endif %}">
+              {{ item.task }}
+            </span>
+          </td>
+          <td>
+            <strong>👤 {{ item.assignee }}</strong>
+          </td>
+          <td>
+            {% set prioClass = 'priority-high' if item.priority == 'High' else ('priority-medium' if item.priority == 'Medium' else 'priority-low') %}
+            <span class="badge-priority {{ prioClass }}">{{ item.priority }}</span>
+          </td>
+          <td>📅 {{ item.due_date }}</td>
+          <td>
+            <a href="/meeting/{{ item.meeting_id }}" style="font-size: 0.85rem;">
+              {{ item.meeting_title }}
+            </a>
+          </td>
+          <td>
+            {% set statusClass = 'status-completed' if item.status == 'Completed' else ('status-in-progress' if item.status == 'In Progress' else 'status-pending') %}
+            <span class="badge-status {{ statusClass }}" onclick="toggleTaskStatus({{ item.id }})">
+              {{ item.status }}
+            </span>
+          </td>
+          <td>
+            <button onclick="deleteTask({{ item.id }})" style="background:none; border:none; color:var(--text-dim); cursor:pointer;" title="Delete Task">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div style="text-align: center; padding: 2.5rem 1rem;">
+    <i class="fa-solid fa-list-check" style="font-size: 2.5rem; color: var(--text-dim); margin-bottom: 0.75rem;"></i>
+    <h3>No action items found</h3>
+    <p style="color: var(--text-muted);">All tasks may be completed or no matching tasks for current filters.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function toggleTaskStatus(itemId) {
+  try {
+    const res = await fetch(`/api/action-items/${itemId}/toggle`, { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      window.location.reload();
+    }
+  } catch (err) {
+    console.error("Toggle error:", err);
+  }
+}
+
+async function deleteTask(itemId) {
+  if (!confirm("Are you sure you want to delete this action item?")) return;
+  try {
+    const res = await fetch(`/api/action-items/${itemId}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) {
+      window.location.reload();
+    }
+  } catch (err) {
+    console.error("Delete task error:", err);
+  }
+}
+</script>
+{% endblock %}

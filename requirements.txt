@@ -1,18 +1,16 @@
-# Core ASR & Audio Processing
-torch>=2.0.0
+# Web Framework & Server
+flask>=3.0.0
+
+# Speech Recognition & Audio Processing (Local / Privacy-First)
 faster-whisper>=1.0.0
 speechrecognition>=3.10.0
 soundfile>=0.12.0
 scipy>=1.10.0
 numpy>=1.24.0
 
-# REST API & Web Server
-fastapi>=0.100.0
-uvicorn>=0.22.0
-python-multipart>=0.0.6
-
-# Web UI Dashboard
-streamlit>=1.30.0
+# Document & Report Generation
+reportlab>=4.0.0
+openpyxl>=3.1.0
 
 # Testing & Utilities
 pytest>=7.4.0

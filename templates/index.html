@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MeetBrief - Live Meeting Platform with ASR & MoM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <!-- Meeting Platform Navigation Header -->
+  <header class="meet-header">
+    <div class="header-left">
+      <div class="meet-logo">
+        <i class="fa-solid fa-microphone-lines"></i>
+      </div>
+      <div>
+        <div class="platform-title">MeetBrief</div>
+        <div class="platform-subtitle">Live Meeting Platform • On-Premise ASR</div>
+      </div>
+    </div>
+
+    <!-- Center: Meeting Subject Input -->
+    <div class="meeting-topic-wrapper">
+      <i class="fa-regular fa-bookmark topic-icon"></i>
+      <input type="text" id="meetingTitleInput" class="meeting-topic-input" value="Sprint Review & Project Discussion" placeholder="Enter Meeting Subject / Agenda...">
+    </div>
+
+    <div class="header-right">
+      <div id="meetingStatusBadge" class="meet-status ready">
+        <span class="status-indicator"></span>
+        <span id="meetingStatusText">Ready</span>
+      </div>
+      <div id="meetingTimer" class="meet-timer">00:00</div>
+    </div>
+  </header>
+
+  <!-- Meeting Platform Main Layout -->
+  <main class="meet-stage">
+
+    <!-- Left Stage: Active Speaker & Audio Controls -->
+    <div class="meet-left-panel">
+      
+      <!-- Video / Speaker Tile -->
+      <div class="speaker-tile">
+        <div class="tile-top">
+          <span class="badge-speaker"><i class="fa-solid fa-user-circle"></i> Active Floor</span>
+          <span id="liveEngineBadge" class="badge-engine">ASR Core Active</span>
+        </div>
+
+        <div class="speaker-avatar-container">
+          <div id="pulseRingOuter" class="pulse-ring outer"></div>
+          <div id="pulseRingInner" class="pulse-ring inner"></div>
+          <div id="micAvatar" class="speaker-avatar">
+            <i class="fa-solid fa-microphone"></i>
+          </div>
+        </div>
+
+        <!-- Real-time Voice Waveform Bar -->
+        <div class="waveform-box">
+          <canvas id="audioVisualizer" width="380" height="40"></canvas>
+        </div>
+
+        <div id="micStatusPrompt" class="speaker-label">
+          Microphone is muted. Click "Unmute Mic" to begin speech capture.
+        </div>
+      </div>
+
+      <!-- Meeting Bottom Control Bar (Google Meet Style) -->
+      <div class="meet-controls-bar">
+        <button id="toggleMicBtn" class="control-btn mic-btn" title="Toggle Microphone">
+          <i class="fa-solid fa-microphone-slash"></i>
+          <span id="micBtnText">Unmute Mic</span>
+        </button>
+
+        <label class="control-btn upload-btn" title="Upload Audio File for ASR">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <span>Upload Audio</span>
+          <input type="file" id="audioUploadInput" accept="audio/*,.wav,.mp3,.webm,.m4a" style="display:none;">
+        </label>
+
+        <button id="ttsPlayBtn" class="control-btn tts-btn" title="Read Aloud Minutes of Meeting (Text-to-Speech)">
+          <i class="fa-solid fa-volume-high"></i>
+          <span id="ttsBtnText">Read Aloud MoM</span>
+        </button>
+
+        <button id="saveMomBtn" class="control-btn save-btn" title="Save Minutes of Meeting to Database">
+          <i class="fa-solid fa-floppy-disk"></i>
+          <span>Save MoM</span>
+        </button>
+
+        <button id="downloadTxtBtn" class="control-btn export-btn" title="Download MoM as TXT">
+          <i class="fa-solid fa-download"></i>
+          <span>Export TXT</span>
+        </button>
+      </div>
+
+      <!-- Quick Discussion Starters (Click-to-Test) -->
+      <div class="starter-chips">
+        <span class="starter-label"><i class="fa-solid fa-bolt"></i> Sample Prompts:</span>
+        <button class="starter-chip" data-text="Welcome team to today's meeting. We reviewed the speech recognition architecture and decided to run everything locally on CPU. Lead Developer will complete the testing before Friday.">
+          "Review speech architecture & schedule testing"
+        </button>
+        <button class="starter-chip" data-text="In this session we discussed the database schema and verified that cascading deletes work properly. The documentation team will prepare the presentation slides tomorrow.">
+          "Verify database schema & prepare slides"
+        </button>
+      </div>
+    </div>
+
+    <!-- Right Stage: Live Minutes of the Meeting (MoM) Panel -->
+    <div class="meet-right-panel">
+      <div class="mom-card">
+        <div class="mom-header">
+          <div class="mom-title">
+            <i class="fa-solid fa-file-lines"></i>
+            <span>Minutes of the Meeting (MoM)</span>
+          </div>
+          <div class="mom-metrics">
+            <span id="wordCountBadge" class="metric-pill">0 words</span>
+            <button id="clearMomBtn" class="btn-clear" title="Clear text">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Formatted MoM Body -->
+        <div class="mom-editor-container">
+          <div class="mom-info-banner">
+            <div><strong>Agenda:</strong> <span id="momAgendaDisplay">Sprint Review & Project Discussion</span></div>
+            <div><strong>Time:</strong> <span id="momLiveTimeDisplay">Live Session</span></div>
+          </div>
+
+          <div id="momOutput" class="mom-content-area" contenteditable="true" placeholder="Speech will be transcribed live as Minutes of the Meeting (MoM) with timestamps... You can also edit or type directly here."></div>
+          <div id="interimOutput" class="mom-interim-text"></div>
+        </div>
+
+        <div class="mom-footer">
+          <div class="footer-hint">
+            <i class="fa-solid fa-info-circle"></i> Spoken words are formatted automatically with timestamps. Click "Save MoM" to preserve record.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Saved Minutes of Meeting Archive Section -->
+  <section class="archives-section">
+    <div class="archives-container">
+      <div class="archives-header">
+        <h3><i class="fa-solid fa-folder-open"></i> Saved Minutes of Meeting (MoM) Records</h3>
+        <span class="archives-count">{{ meetings|length }} Saved Session(s)</span>
+      </div>
+
+      <div id="archivesGrid" class="archives-grid">
+        {% for m in meetings %}
+        <div class="archive-card" id="meeting-card-{{ m.id }}">
+          <div class="card-head">
+            <h4 class="card-title">{{ m.title }}</h4>
+            <div class="card-actions">
+              <button class="icon-btn tts-read-card-btn" onclick="readAloudText(this.closest('.archive-card').querySelector('.card-snippet').innerText)" title="Read Aloud">
+                <i class="fa-solid fa-volume-high"></i>
+              </button>
+              <a href="/api/meeting/{{ m.id }}/download" class="icon-btn" title="Download TXT">
+                <i class="fa-solid fa-download"></i>
+              </a>
+              <button class="icon-btn delete" onclick="deleteSavedMeeting({{ m.id }})" title="Delete">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          </div>
+          <div class="card-meta">
+            <span><i class="fa-regular fa-calendar"></i> {{ m.date }}</span>
+            <span><i class="fa-regular fa-clock"></i> {{ m.time }}</span>
+            <span><i class="fa-solid fa-stopwatch"></i> {{ m.duration }}</span>
+          </div>
+          <div class="card-snippet">{{ m.mom_text }}</div>
+        </div>
+        {% else %}
+        <div id="emptyArchivesState" class="empty-archives">
+          No saved meeting minutes yet. Unmute your microphone and speak, then click "Save MoM".
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

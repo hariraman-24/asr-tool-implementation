@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found - MeetBrief{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="text-align: center; padding: 4rem 1.5rem; max-width: 600px; margin: 3rem auto;">
+  <i class="fa-solid fa-triangle-exclamation" style="font-size: 3.5rem; color: var(--amber-warning); margin-bottom: 1.25rem;"></i>
+  <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem;">404 - Resource Not Found</h2>
+  <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+    {{ message or "The meeting or resource you requested could not be found." }}
+  </p>
+  <a href="/" class="btn btn-primary">
+    <i class="fa-solid fa-house"></i> Return to Voice Scribe
+  </a>
+</div>
+{% endblock %}
